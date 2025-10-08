@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+        {
+            "name": "Maps4FS Upgrader",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}\\maps4fsupgrader\\main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+  ]
+}

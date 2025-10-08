@@ -35,7 +35,7 @@ class Maps4FSUpgrader:
             sys.exit(1)
 
         self.containers = [
-            ("maps4fsapi", ContainerParams.maps4fsapi),
+            # ("maps4fsapi", ContainerParams.maps4fsapi),
             ("maps4fsui", ContainerParams.maps4fsui),
         ]
 
@@ -96,8 +96,22 @@ class Maps4FSUpgrader:
             volumes = {}
             if "volumes" in config:
                 for host_path, container_path in config["volumes"].items():
-                    # Expand environment variables in host path
-                    expanded_path = os.path.expandvars(host_path)
+                    # Expand ${USERPROFILE} to actual user directory
+                    if "${USERPROFILE}" in host_path:
+                        user_profile = os.environ.get(
+                            "USERPROFILE", os.path.expanduser("~")
+                        )
+                        expanded_path = host_path.replace(
+                            "${USERPROFILE}", user_profile
+                        )
+                        # Convert Windows backslashes to forward slashes for Docker
+                        expanded_path = expanded_path.replace("\\", "/")
+                        logger.info(
+                            "Expanded volume: %s -> %s", host_path, expanded_path
+                        )
+                    else:
+                        expanded_path = host_path
+                        logger.info("Using volume as-is: %s", host_path)
                     volumes[expanded_path] = {"bind": container_path, "mode": "rw"}
 
             # Prepare ports
