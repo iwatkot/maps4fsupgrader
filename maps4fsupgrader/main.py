@@ -16,7 +16,24 @@ class Maps4FSUpgrader:
     """Handles upgrading Maps4FS containers."""
 
     def __init__(self):
-        self.client = docker.from_env()
+        try:
+            self.client = docker.from_env()
+        except (docker.errors.DockerException, OSError) as e:
+            error_msg = (
+                "Error: Cannot connect to Docker daemon. "
+                "This container needs access to the Docker socket.\n\n"
+                "To run this container properly, use one of these commands:\n\n"
+                "For Windows (PowerShell):\n"
+                "docker run -v //var/run/docker.sock:/var/run/docker.sock "
+                "iwatkot/maps4fsupgrader\n\n"
+                "For Linux/macOS:\n"
+                "docker run -v /var/run/docker.sock:/var/run/docker.sock "
+                "iwatkot/maps4fsupgrader\n\n"
+                f"Original error: {e}"
+            )
+            logger.error(error_msg)
+            sys.exit(1)
+
         self.containers = [
             ("maps4fsapi", ContainerParams.maps4fsapi),
             ("maps4fsui", ContainerParams.maps4fsui),
