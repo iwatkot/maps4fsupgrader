@@ -95,6 +95,9 @@ class Maps4FSUpgrader:
                 expanded_path = host_path.replace(
                     "${USERPROFILE}", os.path.expanduser("~")
                 )
+            # Handle Docker socket path for Windows
+            elif host_path == "/var/run/docker.sock" and os.name == "nt":
+                expanded_path = "//var/run/docker.sock"
             else:
                 expanded_path = os.path.expandvars(host_path)
             expanded[expanded_path] = container_path
