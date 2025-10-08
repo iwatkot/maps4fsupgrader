@@ -30,7 +30,7 @@ class Maps4FSUpgrader:
             sys.exit(1)
 
         self.containers = [
-            # ("maps4fsapi", ContainerParams.maps4fsapi),
+            ("maps4fsapi", ContainerParams.maps4fsapi),
             ("maps4fsui", ContainerParams.maps4fsui),
         ]
 
