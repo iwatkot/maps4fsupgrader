@@ -96,16 +96,9 @@ class Maps4FSUpgrader:
             volumes = {}
             if "volumes" in config:
                 for host_path, container_path in config["volumes"].items():
-                    # Expand ${USERPROFILE} to actual user directory
-                    if "${USERPROFILE}" in host_path:
-                        user_profile = os.environ.get(
-                            "USERPROFILE", os.path.expanduser("~")
-                        )
-                        expanded_path = host_path.replace(
-                            "${USERPROFILE}", user_profile
-                        )
-                        # Convert Windows backslashes to forward slashes for Docker
-                        expanded_path = expanded_path.replace("\\", "/")
+                    # Let os.path.expandvars handle environment variable expansion
+                    expanded_path = os.path.expandvars(host_path).replace("\\", "/")
+                    if expanded_path != host_path:
                         logger.info(
                             "Expanded volume: %s -> %s", host_path, expanded_path
                         )
