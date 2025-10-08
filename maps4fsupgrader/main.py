@@ -1,6 +1,5 @@
 """Maps4FS Container Upgrader."""
 
-import os
 import sys
 import time
 
@@ -86,23 +85,6 @@ class Maps4FSUpgrader:
             logger.error("Error removing image %s: %s", image_name, e)
             return False
 
-    def expand_volumes(self, volumes: dict) -> dict:
-        """Expand environment variables in volume paths."""
-        expanded = {}
-        for host_path, container_path in volumes.items():
-            # Expand ${USERPROFILE} for Windows compatibility
-            if "${USERPROFILE}" in host_path:
-                expanded_path = host_path.replace(
-                    "${USERPROFILE}", os.path.expanduser("~")
-                )
-            # Handle Docker socket path for Windows
-            elif host_path == "/var/run/docker.sock" and os.name == "nt":
-                expanded_path = "//var/run/docker.sock"
-            else:
-                expanded_path = os.path.expandvars(host_path)
-            expanded[expanded_path] = container_path
-        return expanded
-
     def deploy_container(self, container_name: str, config: dict) -> bool:
         """Deploy a container with the given configuration."""
         try:
@@ -112,8 +94,7 @@ class Maps4FSUpgrader:
             # Prepare volumes
             volumes = {}
             if "volumes" in config:
-                expanded_volumes = self.expand_volumes(config["volumes"])
-                for host_path, container_path in expanded_volumes.items():
+                for host_path, container_path in config["volumes"].items():
                     volumes[host_path] = {"bind": container_path, "mode": "rw"}
 
             # Prepare ports
