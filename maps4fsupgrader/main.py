@@ -22,11 +22,7 @@ class Maps4FSUpgrader:
             error_msg = (
                 "Error: Cannot connect to Docker daemon. "
                 "This container needs access to the Docker socket.\n\n"
-                "To run this container properly, use one of these commands:\n\n"
-                "For Windows (PowerShell):\n"
-                "docker run -v //var/run/docker.sock:/var/run/docker.sock "
-                "iwatkot/maps4fsupgrader\n\n"
-                "For Linux/macOS:\n"
+                "To run this container properly, use the command:\n\n"
                 "docker run -v /var/run/docker.sock:/var/run/docker.sock "
                 "iwatkot/maps4fsupgrader\n\n"
                 f"Original error: {e}"
