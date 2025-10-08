@@ -1,6 +1,5 @@
 """Maps4FS Container Upgrader."""
 
-import os
 import sys
 import time
 
@@ -24,7 +23,7 @@ class Maps4FSUpgrader:
                 "This container needs access to the Docker socket.\n\n"
                 "To run this container properly, use the command:\n\n"
                 "docker run -v /var/run/docker.sock:/var/run/docker.sock "
-                "iwatkot/maps4fsupgrader\n\n"
+                '-e USERPROFILE="$env:USERPROFILE" iwatkot/maps4fsupgrader\n\n'
                 f"Original error: {e}"
             )
             logger.error(error_msg)
@@ -92,16 +91,10 @@ class Maps4FSUpgrader:
             volumes = {}
             if "volumes" in config:
                 for host_path, container_path in config["volumes"].items():
-                    # Let os.path.expandvars handle environment variable expansion
-                    expanded_path = os.path.expandvars(host_path).replace("\\", "/")
-                    if expanded_path != host_path:
-                        logger.info(
-                            "Expanded volume: %s -> %s", host_path, expanded_path
-                        )
-                    else:
-                        expanded_path = host_path
-                        logger.info("Using volume as-is: %s", host_path)
-                    volumes[expanded_path] = {"bind": container_path, "mode": "rw"}
+                    # Convert Windows backslashes to forward slashes for Docker
+                    docker_path = host_path.replace("\\", "/")
+                    logger.info("Using volume: %s -> %s", docker_path, container_path)
+                    volumes[docker_path] = {"bind": container_path, "mode": "rw"}
 
             # Prepare ports
             ports = {}

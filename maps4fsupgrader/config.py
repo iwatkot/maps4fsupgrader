@@ -1,5 +1,11 @@
 """Configuration for Maps4FS upgrader containers."""
 
+import os
+
+USERPROFILE = os.getenv("USERPROFILE")
+if not USERPROFILE:
+    raise EnvironmentError("USERPROFILE environment variable is not set.")
+
 
 # pylint: disable=too-few-public-methods
 class ContainerParams:
@@ -10,9 +16,9 @@ class ContainerParams:
         "name": "maps4fsapi",
         "ports": {"8000": "8000"},
         "volumes": {
-            "${USERPROFILE}/maps4fs/mfsrootdir": "/usr/src/app/mfsrootdir",
-            "${USERPROFILE}/maps4fs/templates": "/usr/src/app/templates",
-            "${USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
+            f"{USERPROFILE}/maps4fs/mfsrootdir": "/usr/src/app/mfsrootdir",
+            f"{USERPROFILE}/maps4fs/templates": "/usr/src/app/templates",
+            f"{USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
             "/var/run/docker.sock": "/var/run/docker.sock",
         },
         "restart_policy": {"Name": "unless-stopped"},
@@ -24,12 +30,11 @@ class ContainerParams:
         "name": "maps4fsui",
         "ports": {"3000": "3000"},
         "volumes": {
-            "${USERPROFILE}/maps4fs/mfsrootdir": "/usr/src/app/mfsrootdir",
-            "${USERPROFILE}/maps4fs/templates": "/usr/src/app/templates",
-            "${USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
+            f"{USERPROFILE}/maps4fs/mfsrootdir": "/usr/src/app/mfsrootdir",
+            f"{USERPROFILE}/maps4fs/templates": "/usr/src/app/templates",
+            f"{USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
             "/var/run/docker.sock": "/var/run/docker.sock",
         },
         "restart_policy": {"Name": "unless-stopped"},
         "pull_policy": "always",
-        "depends_on": ["maps4fsapi"],
     }
