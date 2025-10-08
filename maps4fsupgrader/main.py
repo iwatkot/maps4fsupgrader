@@ -1,5 +1,6 @@
 """Maps4FS Container Upgrader."""
 
+import os
 import sys
 import time
 
@@ -95,7 +96,9 @@ class Maps4FSUpgrader:
             volumes = {}
             if "volumes" in config:
                 for host_path, container_path in config["volumes"].items():
-                    volumes[host_path] = {"bind": container_path, "mode": "rw"}
+                    # Expand environment variables in host path
+                    expanded_path = os.path.expandvars(host_path)
+                    volumes[expanded_path] = {"bind": container_path, "mode": "rw"}
 
             # Prepare ports
             ports = {}
