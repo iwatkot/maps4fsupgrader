@@ -4,6 +4,7 @@ import sys
 import time
 
 import docker
+from tqdm import tqdm
 
 from maps4fsupgrader.config import ContainerParams
 from maps4fsupgrader.logger import Logger
@@ -81,11 +82,97 @@ class Maps4FSUpgrader:
             logger.error("Error removing image %s: %s", image_name, e)
             return False
 
+    # pylint: disable=too-many-nested-blocks, too-many-branches
+    def pull_image_with_progress(self, image_name: str) -> bool:
+        """Pull a Docker image with tqdm progress bar."""
+        try:
+            logger.info("Pulling image: %s", image_name)
+
+            try:
+                # Pull with progress tracking
+                pull_logs = self.client.api.pull(image_name, stream=True, decode=True)
+
+                # Track layers and create progress bar
+                layers = {}
+                pbar = None
+                total_layers = 0
+                completed_layers = 0
+
+                for line in pull_logs:
+                    try:
+                        if "status" in line:
+                            status = line["status"]
+                            layer_id = line.get("id", "")
+
+                            # Track new layers
+                            if layer_id and layer_id not in layers:
+                                layers[layer_id] = {"status": "started"}
+                                total_layers += 1
+
+                                # Create progress bar on first layer
+                                if not pbar:
+                                    pbar = tqdm(
+                                        total=0,  # We'll update total as we discover layers
+                                        desc="Pulling layers",
+                                        unit="layer",
+                                        bar_format=(
+                                            "{l_bar}{bar}| {n_fmt}/{total_fmt} layers "
+                                            "[{elapsed}<{remaining}]",
+                                        ),
+                                    )
+
+                                # Update total
+                                pbar.total = total_layers
+                                pbar.refresh()
+
+                            # Update progress on layer completion
+                            if layer_id and status == "Pull complete":
+                                if (
+                                    layers.get(layer_id, {}).get("status")
+                                    != "completed"
+                                ):
+                                    layers[layer_id]["status"] = "completed"
+                                    completed_layers += 1
+                                    if pbar:
+                                        pbar.update(1)
+
+                            # Show final result
+                            elif (
+                                "Downloaded newer image" in status
+                                or "Image is up to date" in status
+                            ):
+                                if pbar:
+                                    pbar.close()
+                                logger.info("Result: %s", status)
+                                break
+
+                    # pylint: disable=broad-except
+                    except Exception:
+                        continue
+
+                # Close progress bar if still open
+                if pbar:
+                    pbar.close()
+
+            # pylint: disable=broad-except
+            except Exception as stream_error:
+                # If streaming fails, fall back to simple pull
+                logger.warning("Streaming failed, using simple pull: %s", stream_error)
+                self.client.images.pull(image_name)
+
+            logger.info("Successfully pulled: %s", image_name)
+            return True
+
+        except (docker.errors.APIError, docker.errors.DockerException) as e:
+            logger.error("Failed to pull image %s: %s", image_name, e)
+            return False
+
     def deploy_container(self, container_name: str, config: dict) -> bool:
         """Deploy a container with the given configuration."""
         try:
-            logger.info("Pulling latest image: %s", config["image"])
-            self.client.images.pull(config["image"])
+            # Pull image with progress
+            if not self.pull_image_with_progress(config["image"]):
+                return False
 
             # Prepare volumes
             volumes = {}
@@ -95,12 +182,14 @@ class Maps4FSUpgrader:
                     docker_path = host_path.replace("\\", "/")
                     logger.info("Using volume: %s -> %s", docker_path, container_path)
                     volumes[docker_path] = {"bind": container_path, "mode": "rw"}
+            logger.info("Volumes prepared for container: %s", container_name)
 
             # Prepare ports
             ports = {}
             if "ports" in config:
                 for host_port, container_port in config["ports"].items():
                     ports[container_port] = host_port
+            logger.info("Ports prepared for container: %s", container_name)
 
             logger.info("Creating and starting container: %s", container_name)
             default_restart = {"Name": "unless-stopped"}

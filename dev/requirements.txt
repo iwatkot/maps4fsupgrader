@@ -2,3 +2,5 @@ mypy
 pylint
 docker
 types-docker
+tqdm
+types-tqdm
