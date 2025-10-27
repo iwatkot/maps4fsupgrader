@@ -86,6 +86,7 @@ class Maps4FSUpgrader:
         try:
             logger.info("Pulling latest image: %s", config["image"])
             self.client.images.pull(config["image"])
+            logger.info("Image %s pulled successfully", config["image"])
 
             # Prepare volumes
             volumes = {}
@@ -95,16 +96,21 @@ class Maps4FSUpgrader:
                     docker_path = host_path.replace("\\", "/")
                     logger.info("Using volume: %s -> %s", docker_path, container_path)
                     volumes[docker_path] = {"bind": container_path, "mode": "rw"}
+            logger.info("Volumes prepared for container: %s", container_name)
 
             # Prepare ports
             ports = {}
             if "ports" in config:
                 for host_port, container_port in config["ports"].items():
                     ports[container_port] = host_port
+            logger.info("Ports prepared for container: %s", container_name)
 
             logger.info("Creating and starting container: %s", container_name)
             default_restart = {"Name": "unless-stopped"}
             restart_policy = config.get("restart_policy", default_restart)
+
+            logger.info("Updated restart policy for container: %s", container_name)
+
             self.client.containers.run(
                 image=config["image"],
                 name=config["name"],
