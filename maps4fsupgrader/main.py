@@ -105,17 +105,24 @@ class Maps4FSUpgrader:
                     ports[container_port] = host_port
             logger.info("Ports prepared for container: %s", container_name)
 
+            # Prepare environment variables
+            environment = {}
+            if "environment" in config:
+                environment = config["environment"]
+                logger.info(
+                    "Environment variables for %s: %s", container_name, environment
+                )
+
             logger.info("Creating and starting container: %s", container_name)
             default_restart = {"Name": "unless-stopped"}
             restart_policy = config.get("restart_policy", default_restart)
-
-            logger.info("Updated restart policy for container: %s", container_name)
 
             self.client.containers.run(
                 image=config["image"],
                 name=config["name"],
                 ports=ports,
                 volumes=volumes,
+                environment=environment,
                 restart_policy=restart_policy,
                 detach=True,
             )

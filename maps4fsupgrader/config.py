@@ -1,10 +1,16 @@
 """Configuration for Maps4FS upgrader containers."""
 
 import os
+from maps4fsupgrader.logger import Logger
+
+logger = Logger(level="INFO")
 
 USERPROFILE = os.getenv("USERPROFILE")
 if not USERPROFILE:
+    logger.error("USERPROFILE environment variable is not set.")
     raise EnvironmentError("USERPROFILE environment variable is not set.")
+USERPROFILE = USERPROFILE.replace("\\", "/")
+logger.info("USERPROFILE is set to: %s", USERPROFILE)
 
 
 # pylint: disable=too-few-public-methods
@@ -21,6 +27,9 @@ class ContainerParams:
             f"{USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
             "/var/run/docker.sock": "/var/run/docker.sock",
         },
+        "environment": {
+            "USERPROFILE": USERPROFILE,
+        },
         "restart_policy": {"Name": "unless-stopped"},
         "pull_policy": "always",
     }
@@ -34,6 +43,9 @@ class ContainerParams:
             f"{USERPROFILE}/maps4fs/templates": "/usr/src/app/templates",
             f"{USERPROFILE}/maps4fs/defaults": "/usr/src/app/defaults",
             "/var/run/docker.sock": "/var/run/docker.sock",
+        },
+        "environment": {
+            "USERPROFILE": USERPROFILE,
         },
         "restart_policy": {"Name": "unless-stopped"},
         "pull_policy": "always",
