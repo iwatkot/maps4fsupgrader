@@ -15,6 +15,8 @@
 
 <div align="center">
 
+<img src="https://github.com/iwatkot/maps4fsupgrader/releases/download/0.1.3/upgrader-1280-640.png">
+
 <p align="center">
     <a href="#overview">Overview</a> •
     <a href="#supported-containers">Supported Containers</a> •
